@@ -2,10 +2,10 @@
 require File.expand_path('../lib/comic_vine/version', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.authors       = ["TODO: Write your name"]
-  gem.email         = ["TODO: Write your email address"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.authors       = "Patrick Sharp"
+  gem.email         = "jakanapes@gmail.com"
+  gem.description   = %q{Simple api interface to Comic Vine.  Allows for searches and returning specific information on resources.}
+  gem.summary       = %q{Interface to ComicVine API}
   gem.homepage      = ""
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
