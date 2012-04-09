@@ -31,38 +31,61 @@ The generator also installs an initializer to capture the api key in a class var
 works on a subset of the api actions
 
 characters
+
 chats
+
 concepts
+
 issues
+
 locations
+
 movies
+
 objects
+
 origins
+
 persons
+
 powers
+
 promos
+
 publishers
+
 story_arcs
+
 teams
+
 videos
+
 video_types
+
 volumes
 
-Calls to plurals return arrays of hashes:
+
+Calls to plurals return arrays of CVObjects:
 
 ComicVine::API.characters
 
-Calls to singulars require an id and return a hash
+Calls to singulars require an id and return a CVObject:
 
 ComicVine::API.volume 766
 
-Search takes a resource type and a query string and returns an array of hashes
+Search takes a resource type and a query string and returns an array of CVObjects
 
 ComicVine::API.search 'volume', 'batman'
 
 ## ToDos
+Limits and Offsets
+
+Filtering
+
 Error checking
+
 Documentation
+
 Tests
 
 ## Contributing

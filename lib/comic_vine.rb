@@ -15,6 +15,8 @@ module ComicVine
   class API
     cattr_accessor :key
     
+    API_BASE_URL = "http://api.comicvine.com/"
+    
     LIST_ACTIONS = [ :characters,
                       :chats,
                       :concepts,
@@ -34,9 +36,7 @@ module ComicVine
                       :volumes ].freeze
     
     def self.search res, query
-      url = URI.parse("http://api.comicvine.com/search/?api_key=#{@@key}&format=json&resources=#{res}&query=#{query}")
-      resp = Net::HTTP.get(url)
-      JSON.parse(resp)['results'].map{ |r| ComicVine::CVObject.new(r)}
+      hit_api(build_url("search")+"&resources=#{res}&query=#{query}")
     end
     
     def self.method_missing(method_sym, *arguments, &block)
@@ -51,15 +51,26 @@ module ComicVine
     
     private
       def self.get_list list_type
-        url = URI.parse("http://api.comicvine.com/#{list_type}/?api_key=#{@@key}&format=json")
-        resp = Net::HTTP.get(url)
-        JSON.parse(resp)['results'].map{ |r| ComicVine::CVObject.new(r)}
+        hit_api(build_url(list_type))
       end
       
       def self.get_item item_type, id
-        url = URI.parse("http://api.comicvine.com/#{item_type}/#{id}/?api_key=#{@@key}&format=json")
+        hit_api(build_url("#{item_type}/#{id}"))
+      end
+      
+      def self.hit_api url
+        url = URI.parse(url)
         resp = Net::HTTP.get(url)
-        ComicVine::CVObject.new(JSON.parse(resp)['results'])
+        presp = JSON.parse(resp)
+        if presp['results'].kind_of?(Array)
+          presp['results'].map{ |r| ComicVine::CVObject.new(r)}
+        else
+          ComicVine::CVObject.new(presp['results'])
+        end
+      end
+      
+      def self.build_url action
+        API_BASE_URL+action+"/?api_key=#{@@key}&format=json"
       end
   end
 end
