@@ -9,6 +9,23 @@ module ComicVine
         instance_variable_set "@#{k}", v
       end
     end
+    
+    def method_missing(method_sym, *arguments, &block)
+      if method_sym.to_s =~ /^get_(.*)$/
+        get, key = method_sym.to_s.split "_"
+        if instance_variable_defined?("@#{key}") && ComicVine::API::LIST_ACTIONS.include?(key.to_sym)
+          res = []
+          send(key).each do |i|
+            res << ComicVine::API.send(key.singularize, i['id'])
+          end
+          return res
+        else
+          super
+        end
+      elsif
+        super
+      end
+    end
   end
   
   class API
