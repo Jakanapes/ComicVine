@@ -36,7 +36,7 @@ module ComicVine
     def self.search res, query
       url = URI.parse("http://api.comicvine.com/search/?api_key=#{@@key}&format=json&resources=#{res}&query=#{query}")
       resp = Net::HTTP.get(url)
-      JSON.parse(resp)['results']
+      JSON.parse(resp)['results'].map{ |r| ComicVine::CVObject.new(r)}
     end
     
     def self.method_missing(method_sym, *arguments, &block)
@@ -53,7 +53,7 @@ module ComicVine
       def self.get_list list_type
         url = URI.parse("http://api.comicvine.com/#{list_type}/?api_key=#{@@key}&format=json")
         resp = Net::HTTP.get(url)
-        JSON.parse(resp)['results']
+        JSON.parse(resp)['results'].map{ |r| ComicVine::CVObject.new(r)}
       end
       
       def self.get_item item_type, id
