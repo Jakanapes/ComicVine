@@ -1,6 +1,6 @@
 # ComicVine
 
-TODO: Write a gem description
+VERY simple first cut at a gem to interface with the ComicVine api.  http://api.comicvine.com/
 
 ## Installation
 
@@ -15,10 +15,55 @@ And then execute:
 Or install it yourself as:
 
     $ gem install comic_vine
+    
+You will also need to have a ComicVine API key.
+
+After installing gem run the generator
+
+rails g comic_vine:install
+
+This will install a keyfile at config/cv_key.yml.  Update this file with your own API key.
+
+The generator also installs an initializer to capture the api key in a class variable for ComicVine::API
 
 ## Usage
 
-TODO: Write usage instructions here
+works on a subset of the api actions
+
+characters
+chats
+concepts
+issues
+locations
+movies
+objects
+origins
+persons
+powers
+promos
+publishers
+story_arcs
+teams
+videos
+video_types
+volumes
+
+Calls to plurals return arrays of hashes:
+
+ComicVine::API.characters
+
+Calls to singulars require an id and return a hash
+
+ComicVine::API.volume 766
+
+Search takes a resource type and a query string and returns an array of hashes
+
+ComicVine::API.search 'volume', 'batman'
+
+## ToDos
+Error checking
+Documentation
+Tests
 
 ## Contributing
 
