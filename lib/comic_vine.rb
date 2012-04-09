@@ -5,7 +5,6 @@ module ComicVine
   class CVObject
     def initialize(args)
       args.each do |k,v|
-        puts "Trying to put in #{k} which is a #{v.class}"
         class_eval { attr_accessor k }
         instance_variable_set "@#{k}", v
       end
