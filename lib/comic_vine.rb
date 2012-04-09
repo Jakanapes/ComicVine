@@ -2,6 +2,16 @@ require "comic_vine/version"
 require "net/http"
 
 module ComicVine
+  class CVObject
+    def initialize(args)
+      args.each do |k,v|
+        puts "Trying to put in #{k} which is a #{v.class}"
+        class_eval { attr_accessor k }
+        instance_variable_set "@#{k}", v
+      end
+    end
+  end
+  
   class API
     cattr_accessor :key
     
@@ -33,7 +43,7 @@ module ComicVine
       if LIST_ACTIONS.include?(method_sym)
         self.get_list method_sym.to_s
       elsif LIST_ACTIONS.include?(method_sym.to_s.pluralize.to_sym)
-        self.get_item method_sym.to_s.pluralize, arguments.first
+        self.get_item method_sym, arguments.first
       elsif
         super
       end
@@ -49,7 +59,7 @@ module ComicVine
       def self.get_item item_type, id
         url = URI.parse("http://api.comicvine.com/#{item_type}/#{id}/?api_key=#{@@key}&format=json")
         resp = Net::HTTP.get(url)
-        JSON.parse(resp)['results'].first
+        ComicVine::CVObject.new(JSON.parse(resp)['results'])
       end
   end
 end
