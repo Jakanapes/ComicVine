@@ -8,9 +8,9 @@ module ComicVine
         copy_file "cv_key.yml", "config/cv_key.yml"
       end
       
-      def copy_the_init
-        copy_file "initializer.rb", "config/initializers/comic_vine.rb"
-      end
+      #def copy_the_init
+      #  copy_file "initializer.rb", "config/initializers/comic_vine.rb"
+      #end
 
     end
   end

@@ -1,0 +1,5 @@
+0.0.3 - Add simple associations, remove initializer and do that work in the railtie class, error check on CV response, allow options
+
+0.0.2 - Create CVObjects from resource returns
+
+0.0.1 - First check-in
