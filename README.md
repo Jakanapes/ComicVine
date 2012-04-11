@@ -63,26 +63,35 @@ video_types
 volumes
 
 
-Calls to plurals return arrays of CVObjects:
+Calls to plurals return a CVObjectList:
 
-ComicVine::API.characters
+    chars = ComicVine::API.characters
+    
+Pagination will return nil if you are at either end of the list
+    
+    chars.next_page
+    chars.prev_page
 
 Calls to singulars require an id and return a CVObject:
 
-ComicVine::API.volume 766
+    ComicVine::API.volume 766
 
-Search takes a resource type and a query string and returns an array of CVObjects
+Search takes a resource type or types, separated by a comma(ex. "volume,issue"), and a query string and returns a CVSearchList (also with pagination)
 
-ComicVine::API.search 'volume', 'batman'
+    results = ComicVine::API.search 'volume', 'batman'
+    
+Call fetch to retrieve the full object
+    
+    results.first.fetch
 
 Pass in options as a hash
 
-ComicVine::API.characters :limit=>5, :offset=>10
+    ComicVine::API.characters {}:limit=>5, :offset=>10}
 
 There are limited associations.  If the name of the association matches the resource name, then you can get the array of CVObjects by calling get_[resource]
 
-volume = ComicVine::API.volume 766
-issues = volume.get_issues
+    volume = ComicVine::API.volume 766
+    issues = volume.get_issues
 
 Error responses from the API will raise a CVError with the error message
 
