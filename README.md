@@ -67,7 +67,7 @@ Calls to plurals return a CVObjectList:
 
     chars = ComicVine::API.characters
     
-Pagination will return nil if you are at either end of the list
+Pagination will return nil if you are at either end of the list, otherwise it will update the object allowing for looping
     
     chars.next_page
     chars.prev_page
@@ -86,7 +86,7 @@ Call fetch to retrieve the full object
 
 Pass in options as a hash
 
-    ComicVine::API.characters {}:limit=>5, :offset=>10}
+    ComicVine::API.characters {:limit=>5, :offset=>10}
 
 There are limited associations.  If the name of the association matches the resource name, then you can get the array of CVObjects by calling get_[resource]
 
