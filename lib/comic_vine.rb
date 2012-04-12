@@ -71,6 +71,5 @@ module ComicVine
   end
 end
 
-require 'comic_vine/railtie'
 require 'comic_vine/cv_object'
 require 'comic_vine/cv_list'
