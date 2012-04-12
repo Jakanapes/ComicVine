@@ -18,13 +18,11 @@ Or install it yourself as:
     
 You will also need to have a ComicVine API key.
 
-After installing gem run the generator
-
-rails g comic_vine:install
-
-This will install a keyfile at config/cv_key.yml.  Update this file with your own API key.
-
 ## Usage
+
+Requires that API key be set manually.  This is a breaking change from 0.0.4.
+
+    ComicVine::API.key = xxxxxx
 
 works on a subset of the api actions
 
