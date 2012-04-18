@@ -61,9 +61,13 @@ video_types
 volumes
 
 
-Calls to plurals return a CVObjectList:
+Calls to plurals return a CVObjectList, which contains the result array as well as the values from the return (total_count, offset, limit, resource).
 
     chars = ComicVine::API.characters
+
+CVObjectLists include enumerable, so they can be looped.
+
+    chars.each do |c|
     
 Pagination will return nil if you are at either end of the list, otherwise it will update the object allowing for looping
     
@@ -86,10 +90,11 @@ Pass in options as a hash
 
     ComicVine::API.characters {:limit=>5, :offset=>10}
 
-There are limited associations.  If the name of the association matches the resource name, then you can get the array of CVObjects by calling get_[resource]
+There are associations.  Call the association by the key name, prefaced by get_ and the gem will return either a CVList or a CVObject from the API.
 
     volume = ComicVine::API.volume 766
     issues = volume.get_issues
+    chars = volume.get_character_credits
 
 Error responses from the API will raise a CVError with the error message
 

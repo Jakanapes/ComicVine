@@ -11,15 +11,16 @@ module ComicVine
       if method_sym.to_s =~ /^get_(.*)$/
         key = method_sym.to_s.sub "get_", ""
         if instance_variable_defined?("@#{key}")
-          if type = ComicVine::API.find_list(key)
+          item = instance_variable_get("@#{key}")
+          if item.kind_of?(Array) && item.first.key?("api_detail_url")
             res = []
-            send(key).each do |i|
-              res << ComicVine::API.send(type['detail_resource_name'], i['id'])
+            item.each do |i|
+              res << ComicVine::API.get_details_by_url(i["api_detail_url"])
             end
             return res
           end
-          if ComicVine::API.find_detail(key)
-            return ComicVine::API.send(key, send(key)['id'])
+          if item.kind_of?(Hash) && item.key?("api_detail_url")
+            return ComicVine::API.get_details_by_url(item["api_detail_url"])
           end
         else
           super

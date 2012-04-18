@@ -16,4 +16,5 @@ Gem::Specification.new do |gem|
   gem.version       = ComicVine::VERSION
   
   gem.add_dependency 'json'
+  gem.add_development_dependency "rspec", ">= 2.0.0"
 end
