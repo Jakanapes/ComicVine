@@ -1,3 +1,5 @@
+0.0.8 - Fix bug exposing api-key
+
 0.0.7 - Fix bug with search
 
 0.0.6 - Expose the helper methods, add get_details_by_url, allow get_* for ANY of the resource items returned in the body

@@ -74,7 +74,7 @@ module ComicVine
     
       private
         def hit_api base_url, query=""
-          url = base_url<<"?format=json&api_key=#{@@key}"<<query
+          url = base_url+"?format=json&api_key=#{@@key}"+query
           uri = URI.parse(url)
           resp = Net::HTTP.get(uri)
           presp = JSON.parse(resp)
