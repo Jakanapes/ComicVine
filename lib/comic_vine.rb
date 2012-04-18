@@ -17,7 +17,9 @@ module ComicVine
 
     class << self
       def search res, query, opts={}
-        resp = hit_api(build_url("search", opts)+"&resources=#{res}&query=#{query}")
+        opts[:resources] = res
+        opts[:query] = query
+        resp = hit_api(build_base_url("search"), build_query(opts))
         ComicVine::CVSearchList.new(resp, res, query)
       end
     

@@ -1,3 +1,5 @@
+0.0.7 - Fix bug with search
+
 0.0.6 - Expose the helper methods, add get_details_by_url, allow get_* for ANY of the resource items returned in the body
 
 0.0.5 - Behind the scenes cleanup.  Change gem to work as a pure ruby implementation.  API.key is now manually set as opposed to reading from a config file.  Removed generator and railties.
