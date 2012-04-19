@@ -50,7 +50,7 @@ module ComicVine
       end
     
       def types
-        if @@types.nil? || (@@last_type_check + (4 *60 *60)) > Time.now
+        if @@types.nil? || (@@last_type_check + (4 *60 *60)) < Time.now
           @@last_type_check = Time.now
           @@types = hit_api(build_base_url('types'))['results']
         end
