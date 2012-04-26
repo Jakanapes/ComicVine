@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/Jakanapes/ComicVine.png?branch=master)](http://travis-ci.org/Jakanapes/ComicVine)
+
 # ComicVine
 
 VERY simple first cut at a gem to interface with the ComicVine api.  http://api.comicvine.com/
