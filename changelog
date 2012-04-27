@@ -1,3 +1,5 @@
+0.1.1 - Escape query on search, remove spaces from resources
+
 0.1.0 - Fix small bug with types cache, full coverage with rspec
 
 0.0.8 - Fix bug exposing api-key
