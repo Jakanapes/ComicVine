@@ -50,7 +50,7 @@ describe ComicVine do
       
       it { should be_a_kind_of ComicVine::CVSearchList }
       it { should respond_to("total_count", "offset", "limit", "resource", "query")}
-      specify { @results.first.should be_a_kind_of ComicVine::CVSearchObject }
+      specify { @results.first.should be_a_kind_of ComicVine::CVObject }
       specify { @results.first.should == @results.last }
       specify { @results.prev_page.should be_nil }
       

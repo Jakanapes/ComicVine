@@ -61,7 +61,7 @@ module ComicVine
       
       @resource = resc
       @query = query
-      @cvos = resp['results'].map{ |r| ComicVine::CVSearchObject.new(r)}
+      @cvos = resp['results'].map{ |r| ComicVine::CVObject.new(r)}
     end
     
     def next_page
