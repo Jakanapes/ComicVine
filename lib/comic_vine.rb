@@ -14,7 +14,7 @@ module ComicVine
     @@types = nil
     @@last_type_check = nil
     
-    @@API_BASE_URL = "http://api.comicvine.com/"
+    @@API_BASE_URL = "http://www.comicvine.com/api/"
 
     class << self
       def search res, query, opts={}

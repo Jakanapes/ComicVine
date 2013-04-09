@@ -15,7 +15,7 @@ describe ComicVine do
   end
   
   context "when has valid api key" do
-    before { stub_request(:get, "http://api.comicvine.com/types/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => TYPES_BODY, :headers => {}) }
+    before { stub_request(:get, "http://www.comicvine.com/api/types/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => TYPES_BODY, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}) }
     
     describe "invalid method" do
       it "should raise NoMethodError" do
@@ -41,9 +41,9 @@ describe ComicVine do
     
     describe "ComicVine search" do
       before do
-        stub_request(:get, "http://api.comicvine.com/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :resources => "volume", :query => "gizmo"}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => SEARCH_BODY_1, :headers => {})
-        stub_request(:get, "http://api.comicvine.com/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :offset => 0, :resources => "volume", :query => "gizmo"}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => SEARCH_BODY_1, :headers => {})
-        stub_request(:get, "http://api.comicvine.com/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :offset => 1, :resources => "volume", :query => "gizmo"}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => SEARCH_BODY_2, :headers => {})
+        stub_request(:get, "http://www.comicvine.com/api/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :resources => "volume", :query => "gizmo"}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => SEARCH_BODY_1, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
+        stub_request(:get, "http://www.comicvine.com/api/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :offset => 0, :resources => "volume", :query => "gizmo"}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => SEARCH_BODY_1, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
+        stub_request(:get, "http://www.comicvine.com/api/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :offset => 1, :resources => "volume", :query => "gizmo"}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => SEARCH_BODY_2, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
         @results = ComicVine::API.search "volume", "gizmo", {:limit => 1}
       end
       subject { @results }
@@ -66,7 +66,7 @@ describe ComicVine do
       end
       
       it "should fetch the full CVObject" do
-        stub_request(:get, "http://api.comicvine.com/volume/24708/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => VOLUME_BODY, :headers => {})
+        stub_request(:get, "http://www.comicvine.com/api/volume/24708/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => VOLUME_BODY, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
         vol = @results.first.fetch
         vol.should be_a_kind_of ComicVine::CVObject
       end
@@ -74,9 +74,9 @@ describe ComicVine do
     
     describe "ComicVine list" do
       before do
-        stub_request(:get, "http://api.comicvine.com/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUES_BODY_1, :headers => {})
-        stub_request(:get, "http://api.comicvine.com/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 0}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUES_BODY_1, :headers => {})
-        stub_request(:get, "http://api.comicvine.com/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 2}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUES_BODY_2, :headers => {})
+        stub_request(:get, "http://www.comicvine.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUES_BODY_1, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
+        stub_request(:get, "http://www.comicvine.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 0}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUES_BODY_1, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
+        stub_request(:get, "http://www.comicvine.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 2}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUES_BODY_2, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
         @issues = ComicVine::API.issues
       end
       subject { @issues }
@@ -99,7 +99,7 @@ describe ComicVine do
     
     describe "ComicVine detail" do
       before do
-        stub_request(:get, "http://api.comicvine.com/issue/145830/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUE_BODY, :headers => {})
+        stub_request(:get, "http://www.comicvine.com/api/issue/145830/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => ISSUE_BODY, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
         @issue = ComicVine::API.issue 145830
       end
       subject { @issue }
@@ -110,7 +110,7 @@ describe ComicVine do
       specify { lambda { @issue.get_something }.should raise_error(NoMethodError) }
       
       it "should have a detail and list association" do
-        stub_request(:get, "http://api.comicvine.com/volume/24708/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => VOLUME_BODY, :headers => {})
+        stub_request(:get, "http://www.comicvine.com/api/volume/24708/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => VOLUME_BODY, :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'})
         vol = @issue.get_volume
         vol.should be_a_kind_of ComicVine::CVObject
         iss = vol.get_issues
