@@ -1,6 +1,6 @@
 require "comic_vine/version"
 require "net/http"
-require "json"
+require "multi_json"
 require "cgi"
 
 module ComicVine
@@ -14,7 +14,7 @@ module ComicVine
     @@types = nil
     @@last_type_check = nil
     
-    @@API_BASE_URL = "http://api.comicvine.com/"
+    @@API_BASE_URL = "http://www.comicvine.com/api/"
 
     class << self
       def search res, query, opts={}
@@ -78,7 +78,7 @@ module ComicVine
           url = base_url+"?format=json&api_key=#{@@key}"+query
           uri = URI.parse(url)
           resp = Net::HTTP.get(uri)
-          presp = JSON.parse(resp)
+          presp = MultiJson.load(resp)
           raise CVError, presp['error'] unless presp['status_code'] == 1
           presp
         end
