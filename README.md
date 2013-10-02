@@ -12,7 +12,7 @@ Add this line to your application's Gemfile:
 
 And then execute:
 
-    $ bundle
+    $ bundle install
 
 Or install it yourself as:
 
@@ -25,42 +25,6 @@ You will also need to have a ComicVine API key.
 Requires that API key be set manually.  This is a breaking change from 0.0.4.
 
     ComicVine::API.key = xxxxxx
-
-works on a subset of the api actions
-
-characters
-
-chats
-
-concepts
-
-issues
-
-locations
-
-movies
-
-objects
-
-origins
-
-persons
-
-powers
-
-promos
-
-publishers
-
-story_arcs
-
-teams
-
-videos
-
-video_types
-
-volumes
 
 
 Calls to plurals return a CVObjectList, which contains the result array as well as the values from the return (total_count, offset, limit, resource).
