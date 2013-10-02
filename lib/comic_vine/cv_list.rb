@@ -3,12 +3,14 @@ module ComicVine
     include Enumerable
     
     attr_reader :total_count
+    attr_reader :page_count
     attr_reader :offset
     attr_reader :limit
     attr_reader :cvos
     
     def initialize(resp)      
       @total_count = resp['number_of_total_results']
+      @page_count = resp['number_of_page_results']
       @offset = resp['offset']
       @limit = resp['limit']
     end
@@ -19,6 +21,10 @@ module ComicVine
     
     def last
       @cvos.last
+    end
+    
+    def page
+      (@offset / @limit) + 1
     end
     
     protected
@@ -42,13 +48,13 @@ module ComicVine
     end
     
     def next_page
-      return nil if (@offset + count) == @total_count
-      update_ivals(ComicVine::API.send(@resource, {:limit => @limit, :offset => (@offset + count)}))
+      return nil if (@offset + @page_count) >= @total_count
+      update_ivals(ComicVine::API.send(@resource, {:limit => @limit, :offset => (@offset + @page_count)}))
     end
     
     def prev_page
       return nil if @offset == 0
-      update_ivals(ComicVine::API.send(@resource, {:limit => @limit, :offset => (@offset - count)}))
+      update_ivals(ComicVine::API.send(@resource, {:limit => @limit, :offset => (@offset - @page_count)}))
     end
   end
   
@@ -65,13 +71,13 @@ module ComicVine
     end
     
     def next_page
-      return nil if (@offset + count) == @total_count
-      update_ivals(ComicVine::API.search(@resource, @query, {:limit => @limit, :offset => (@offset + count)}))
+      return nil if (@offset + @page_count) >= @total_count
+      update_ivals(ComicVine::API.search(@resource, @query, {:limit => @limit, :page => (((@offset + @page_count) / @limit) + 1)}))
     end
     
     def prev_page
       return nil if @offset == 0
-      update_ivals(ComicVine::API.search(@resource, @query, {:limit => @limit, :offset => (@offset - count)}))
+      update_ivals(ComicVine::API.search(@resource, @query, {:limit => @limit, :page => (@offset / @limit)}))
     end
   end
 end

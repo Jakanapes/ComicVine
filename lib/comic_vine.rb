@@ -64,7 +64,7 @@ module ComicVine
       end
   
       def get_details item_type, id, opts=nil
-        resp = hit_api(build_base_url("#{item_type}/#{id}"), build_query(opts))
+        resp = hit_api(build_base_url("#{item_type}/#{find_detail(item_type)['id']}-#{id}"), build_query(opts))
         ComicVine::CVObject.new(resp['results'])
       end
       
