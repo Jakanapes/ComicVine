@@ -14,6 +14,7 @@ Gem::Specification.new do |gem|
   gem.name          = "comic_vine"
   gem.require_paths = ["lib"]
   gem.version       = ComicVine::VERSION
+  gem.license       = 'MIT'
   
   gem.add_dependency 'multi_json'
   gem.add_development_dependency "rspec", ">= 2.0.0"

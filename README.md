@@ -64,6 +64,10 @@ There are associations.  Call the association by the key name, prefaced by get_ 
 
 Error responses from the API will raise a CVError with the error message
 
+
+This gem is released under the MIT license, if you find it useful in your application, drop me a line and I'll post a link!
+
+
 ## ToDos
 More Error checking
 
