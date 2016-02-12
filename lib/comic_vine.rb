@@ -5,7 +5,7 @@ require "cgi"
 
 module ComicVine
   
-  class CVError < StandardError  
+  class CVError < StandardError
   end
   
   class API
@@ -14,7 +14,7 @@ module ComicVine
     @@types = nil
     @@last_type_check = nil
     
-    @@API_BASE_URL = "http://www.comicvine.com/api/"
+    @@API_BASE_URL = "http://comicvine.gamespot.com/api/"
 
     class << self
       def search res, query, opts={}
