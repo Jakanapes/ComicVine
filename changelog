@@ -1,3 +1,5 @@
+0.1.5 - Use comicvine url with ssl
+
 0.1.4 - Update comicvine api url
 
 0.1.1 - Escape query on search, remove spaces from resources
