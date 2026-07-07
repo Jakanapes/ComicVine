@@ -30,6 +30,7 @@ module ComicVine
     protected
       def update_ivals(new_cvol)
         @total_count = new_cvol.total_count
+        @page_count = new_cvol.page_count
         @offset = new_cvol.offset
         @limit = new_cvol.limit
 
@@ -39,45 +40,51 @@ module ComicVine
   
   class CVObjectList < CVList
     attr_reader :resource
-    
-    def initialize(resp, resc)      
+
+    def initialize(resp, resc, opts={})
       super(resp)
-      
+
       @resource = resc
+      @opts = opts || {}
       @cvos = resp['results'].map{ |r| ComicVine::CVObject.new(r)}
     end
-    
+
     def next_page
       return nil if (@offset + @page_count) >= @total_count
-      update_ivals(ComicVine::API.send(@resource, {:limit => @limit, :offset => (@offset + @page_count)}))
+      update_ivals(ComicVine::API.send(@resource, @opts.merge(:limit => @limit, :offset => (@offset + @limit))))
+      self
     end
-    
+
     def prev_page
       return nil if @offset == 0
-      update_ivals(ComicVine::API.send(@resource, {:limit => @limit, :offset => (@offset - @page_count)}))
+      update_ivals(ComicVine::API.send(@resource, @opts.merge(:limit => @limit, :offset => [@offset - @limit, 0].max)))
+      self
     end
   end
-  
+
   class CVSearchList < CVList
     attr_reader :resource
     attr_reader :query
-    
-    def initialize(resp, resc, query)      
+
+    def initialize(resp, resc, query, opts={})
       super(resp)
-      
+
       @resource = resc
       @query = query
+      @opts = opts || {}
       @cvos = resp['results'].map{ |r| ComicVine::CVObject.new(r)}
     end
-    
+
     def next_page
       return nil if (@offset + @page_count) >= @total_count
-      update_ivals(ComicVine::API.search(@resource, @query, {:limit => @limit, :page => (((@offset + @page_count) / @limit) + 1)}))
+      update_ivals(ComicVine::API.search(@resource, @query, @opts.merge(:limit => @limit, :page => page + 1)))
+      self
     end
-    
+
     def prev_page
       return nil if @offset == 0
-      update_ivals(ComicVine::API.search(@resource, @query, {:limit => @limit, :page => (@offset / @limit)}))
+      update_ivals(ComicVine::API.search(@resource, @query, @opts.merge(:limit => @limit, :page => page - 1)))
+      self
     end
   end
 end

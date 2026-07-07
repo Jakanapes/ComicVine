@@ -18,10 +18,9 @@ module ComicVine
 
     class << self
       def search res, query, opts={}
-        opts[:resources] = res.gsub " ", ""
-        opts[:query] = CGI::escape query
-        resp = hit_api(build_base_url("search"), build_query(opts))
-        ComicVine::CVSearchList.new(resp, res, query)
+        query_opts = opts.merge(:resources => res.gsub(" ", ""), :query => query)
+        resp = hit_api(build_base_url("search"), build_query(query_opts))
+        ComicVine::CVSearchList.new(resp, res, query, opts)
       end
     
       def find_list type
@@ -37,7 +36,7 @@ module ComicVine
           get_list method_sym.to_s, arguments.first
         elsif find_detail(method_sym.to_s)
           get_details method_sym.to_s, *arguments
-        elsif
+        else
           super
         end
       end
@@ -60,11 +59,13 @@ module ComicVine
 
       def get_list list_type, opts=nil
         resp = hit_api(build_base_url(list_type), build_query(opts))
-        ComicVine::CVObjectList.new(resp, list_type)
+        ComicVine::CVObjectList.new(resp, list_type, opts || {})
       end
-  
+
       def get_details item_type, id, opts=nil
-        resp = hit_api(build_base_url("#{item_type}/#{find_detail(item_type)['id']}-#{id}"), build_query(opts))
+        detail = find_detail(item_type)
+        raise CVError, "Unknown ComicVine resource type: #{item_type}" if detail.nil?
+        resp = hit_api(build_base_url("#{item_type}/#{detail['id']}-#{id}"), build_query(opts))
         ComicVine::CVObject.new(resp['results'])
       end
       
@@ -88,13 +89,8 @@ module ComicVine
         end
         
         def build_query opts=nil
-          query = ''
-          if !opts.nil? && !opts.empty?
-            opts.each do |k,v|
-              query << "&#{k.to_s}=#{v}"
-            end
-          end
-          query
+          return '' if opts.nil? || opts.empty?
+          opts.map { |k, v| "&#{k}=#{CGI.escape(v.to_s)}" }.join
         end
 
     end
