@@ -15,10 +15,11 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = ComicVine::VERSION
   gem.license       = 'MIT'
+  gem.required_ruby_version = ">= 3.4"
   
   gem.add_dependency 'multi_json'
-  gem.add_development_dependency "rspec", ">= 2.0.0"
-  gem.add_development_dependency "webmock"
+  gem.add_development_dependency "rspec", "~> 3.13"
+  gem.add_development_dependency "webmock", "~> 3.0"
   gem.add_development_dependency "simplecov"
   gem.add_development_dependency "rake"
 end
