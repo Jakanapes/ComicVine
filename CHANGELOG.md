@@ -4,7 +4,10 @@ Notable changes to this project are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/); dates for releases
 before 2026 are taken from the git history.
 
-## [0.2.0] — Unreleased
+## [1.0.0] — 2026-07-08
+
+First stable release. **Breaking**: requires Ruby >= 3.4, and error handling
+and pagination behavior have changed as described below.
 
 ### Added
 
