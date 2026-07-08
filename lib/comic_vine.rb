@@ -16,7 +16,6 @@ require "cgi"
 #     ComicVine::API.characters(limit: 5)
 #     ComicVine::API.search "volume", "batman"
 module ComicVine
-
   # Base class for all errors raised by this gem.
   class CVError < StandardError
   end
@@ -110,7 +109,7 @@ module ComicVine
       # @param opts [Hash] extra query options (`:limit`, `:field_list`, ...)
       # @return [CVSearchList]
       # @raise [CVError]
-      def search res, query, opts={}
+      def search res, query, opts = {}
         query_opts = opts.merge(:resources => res.gsub(" ", ""), :query => query)
         resp = hit_api(build_base_url("search"), build_query(query_opts))
         ComicVine::CVSearchList.new(resp, res, query, opts)
@@ -134,7 +133,7 @@ module ComicVine
 
       # Resolves resource methods (`ComicVine::API.characters`,
       # `ComicVine::API.volume 766`, ...) against the `/types/` list.
-      def method_missing(method_sym, *arguments, &block)
+      def method_missing(method_sym, *arguments, &)
         if find_list(method_sym.to_s)
           get_list method_sym.to_s, arguments.first
         elsif find_detail(method_sym.to_s)
@@ -147,6 +146,7 @@ module ComicVine
       def respond_to_missing?(method_sym, include_private = false)
         name = method_sym.to_s
         return true if find_list(name) || find_detail(name)
+
         super
       rescue CVError
         super
@@ -190,7 +190,7 @@ module ComicVine
       #   `:sort`, `:field_list`, ...)
       # @return [CVObjectList]
       # @raise [CVError]
-      def get_list list_type, opts=nil
+      def get_list list_type, opts = nil
         resp = hit_api(build_base_url(list_type), build_query(opts))
         ComicVine::CVObjectList.new(resp, list_type, opts || {})
       end
@@ -202,9 +202,10 @@ module ComicVine
       # @param opts [Hash, nil] query options (`:field_list`, ...)
       # @return [CVObject]
       # @raise [CVError] if the type is unknown or the request fails
-      def get_details item_type, id, opts=nil
+      def get_details item_type, id, opts = nil
         detail = find_detail(item_type)
         raise CVError, "Unknown ComicVine resource type: #{item_type}" if detail.nil?
+
         resp = hit_api(build_base_url("#{item_type}/#{detail['id']}-#{id}"), build_query(opts))
         ComicVine::CVObject.new(resp['results'])
       end
@@ -220,81 +221,86 @@ module ComicVine
       end
 
       private
-        def hit_api base_url, query=""
-          uri = URI.parse("#{base_url}?format=json&api_key=#{@key}#{query}")
-          response = fetch_with_retries(uri)
-          parse_body(response.body)
-        end
 
-        def fetch_with_retries uri
-          attempt = 0
-          loop do
-            attempt += 1
-            begin
-              response = perform_request(uri)
-            rescue *RETRYABLE_EXCEPTIONS => e
-              if attempt <= max_retries
-                sleep retry_delay(attempt)
-                next
-              end
-              raise CVConnectionError, "Connection to #{uri.host} failed after #{attempt} attempts: #{e.class}: #{e.message}"
-            end
+      def hit_api base_url, query = ""
+        uri = URI.parse("#{base_url}?format=json&api_key=#{@key}#{query}")
+        response = fetch_with_retries(uri)
+        parse_body(response.body)
+      end
 
-            code = response.code.to_i
-            return response if (200..299).cover?(code)
-
-            if RETRYABLE_STATUS_CODES.include?(code) && attempt <= max_retries
-              sleep retry_delay(attempt, response)
+      def fetch_with_retries uri
+        attempt = 0
+        loop do
+          attempt += 1
+          begin
+            response = perform_request(uri)
+          rescue *RETRYABLE_EXCEPTIONS => e
+            if attempt <= max_retries
+              sleep retry_delay(attempt)
               next
             end
-
-            if code == 420 || code == 429
-              raise CVRateLimitError.new("ComicVine rate limit hit (HTTP #{code}) and still throttled after #{attempt} attempts. The API allows roughly 200 requests per resource per hour.", code)
-            end
-            raise CVHTTPError.new("ComicVine API returned HTTP #{code} #{response.message}".strip, code)
+            raise CVConnectionError, "Connection to #{uri.host} failed after #{attempt} attempts: #{e.class}: #{e.message}"
           end
-        end
 
-        def perform_request uri
-          Net::HTTP.start(uri.host, uri.port,
-                          :use_ssl => uri.scheme == "https",
-                          :open_timeout => open_timeout,
-                          :read_timeout => read_timeout) do |http|
-            request = Net::HTTP::Get.new(uri)
-            request["User-Agent"] = user_agent
-            request["Accept"] = "application/json"
-            http.request(request)
+          code = response.code.to_i
+          return response if (200..299).cover?(code)
+
+          if RETRYABLE_STATUS_CODES.include?(code) && attempt <= max_retries
+            sleep retry_delay(attempt, response)
+            next
           end
-        end
 
-        def retry_delay attempt, response = nil
-          if response && response["Retry-After"].to_s =~ /\A\d+\z/
-            response["Retry-After"].to_i
-          else
-            retry_base_delay * (2 ** (attempt - 1))
+          if [420, 429].include?(code)
+            raise CVRateLimitError.new(
+              "ComicVine rate limit hit (HTTP #{code}) and still throttled after #{attempt} attempts. The API allows roughly 200 requests per resource per hour.", code
+            )
           end
-        end
 
-        def parse_body body
-          presp = begin
-            JSON.parse(body)
-          rescue JSON::ParserError => e
-            raise CVParseError, "ComicVine returned a response that is not valid JSON: #{e.message}"
-          end
-          raise CVParseError, "ComicVine returned unexpected JSON (expected an object, got #{presp.class})" unless presp.kind_of?(Hash)
-          raise CVAPIError, presp['error'] unless presp['status_code'] == 1
-          presp
+          raise CVHTTPError.new("ComicVine API returned HTTP #{code} #{response.message}".strip, code)
         end
+      end
 
-        def build_base_url action
-          API_BASE_URL+action+"/"
+      def perform_request uri
+        Net::HTTP.start(uri.host, uri.port,
+                        :use_ssl => uri.scheme == "https",
+                        :open_timeout => open_timeout,
+                        :read_timeout => read_timeout) do |http|
+          request = Net::HTTP::Get.new(uri)
+          request["User-Agent"] = user_agent
+          request["Accept"] = "application/json"
+          http.request(request)
         end
+      end
 
-        def build_query opts=nil
-          return '' if opts.nil? || opts.empty?
-          opts.map { |k, v| "&#{k}=#{CGI.escape(v.to_s)}" }.join
+      def retry_delay attempt, response = nil
+        if response && response["Retry-After"].to_s =~ /\A\d+\z/
+          response["Retry-After"].to_i
+        else
+          retry_base_delay * (2**(attempt - 1))
         end
+      end
 
+      def parse_body body
+        presp = begin
+          JSON.parse(body)
+        rescue JSON::ParserError => e
+          raise CVParseError, "ComicVine returned a response that is not valid JSON: #{e.message}"
+        end
+        raise CVParseError, "ComicVine returned unexpected JSON (expected an object, got #{presp.class})" unless presp.is_a?(Hash)
+        raise CVAPIError, presp['error'] unless presp['status_code'] == 1
+
+        presp
+      end
+
+      def build_base_url action
+        "#{API_BASE_URL}#{action}/"
+      end
+
+      def build_query opts = nil
+        return '' if opts.nil? || opts.empty?
+
+        opts.map { |k, v| "&#{k}=#{CGI.escape(v.to_s)}" }.join
+      end
     end
   end
 end

@@ -7,10 +7,10 @@ module ComicVine
   class CVObject
     # @param args [Hash] a resource hash from the API response
     def initialize(args)
-      args.each do |k,v|
+      args.each do |k, v|
         singleton_class.class_eval { attr_reader k } unless respond_to?(k)
-        v.collect! { |i| CVObject.new i } if v.kind_of?(Array) && v.first.kind_of?(Hash) && v.first.key?("api_detail_url")
-        v = CVObject.new v if v.kind_of?(Hash) && v.key?("api_detail_url")
+        v.collect! { |i| CVObject.new i } if v.is_a?(Array) && v.first.is_a?(Hash) && v.first.key?("api_detail_url")
+        v = CVObject.new v if v.is_a?(Hash) && v.key?("api_detail_url")
         instance_variable_set "@#{k}", v
       end
     end
@@ -25,14 +25,14 @@ module ComicVine
 
     # Resolves `get_<key>` calls: fetches the full object(s) behind an
     # association, or returns the plain value if it isn't an association.
-    def method_missing(method_sym, *arguments, &block)
+    def method_missing(method_sym, *arguments, &)
       if method_sym.to_s =~ /^get_(.*)$/
         key = $1
         if instance_variable_defined?("@#{key}")
           item = instance_variable_get("@#{key}")
-          if item.kind_of?(Array) && item.first.kind_of?(CVObject)
-            item.map { |i| i.fetch }
-          elsif item.kind_of?(CVObject)
+          if item.is_a?(Array) && item.first.is_a?(CVObject)
+            item.map(&:fetch)
+          elsif item.is_a?(CVObject)
             item.fetch
           else
             item

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe ComicVine do
@@ -13,7 +15,7 @@ RSpec.describe ComicVine do
     before do
       # Reset the cached types list so the request is actually made
       ComicVine::API.reset_types_cache!
-      stub_request(:get, "https://comicvine.gamespot.com/api/types/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => ERROR_BODY)
+      stub_request(:get, "https://comicvine.gamespot.com/api/types/").with(:query => { :format => 'json', :api_key => ComicVine::API.key }).to_return(:status => 200, :body => ERROR_BODY)
     end
 
     it "raises a CVAPIError naming the hidden types call" do
@@ -24,7 +26,7 @@ RSpec.describe ComicVine do
   context "when has valid api key" do
     before do
       ComicVine::API.reset_types_cache!
-      stub_request(:get, "https://comicvine.gamespot.com/api/types/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => TYPES_BODY)
+      stub_request(:get, "https://comicvine.gamespot.com/api/types/").with(:query => { :format => 'json', :api_key => ComicVine::API.key }).to_return(:status => 200, :body => TYPES_BODY)
     end
 
     describe "invalid method" do
@@ -47,7 +49,7 @@ RSpec.describe ComicVine do
 
     describe "HTTP robustness" do
       let(:url) { "https://comicvine.gamespot.com/api/issues/" }
-      let(:query) { {:format => 'json', :api_key => ComicVine::API.key} }
+      let(:query) { { :format => 'json', :api_key => ComicVine::API.key } }
 
       it "raises CVHTTPError with the status on a non-retryable HTTP error" do
         stub_request(:get, url).with(:query => query).to_return(:status => 404, :body => "not found")
@@ -61,8 +63,8 @@ RSpec.describe ComicVine do
 
       it "retries retryable statuses and succeeds" do
         stub_request(:get, url).with(:query => query)
-          .to_return(:status => 503, :body => "")
-          .to_return(:status => 200, :body => ISSUES_BODY_1)
+                               .to_return(:status => 503, :body => "")
+                               .to_return(:status => 200, :body => ISSUES_BODY_1)
         expect(ComicVine::API.issues).to be_a_kind_of(ComicVine::CVList)
         expect(a_request(:get, url).with(:query => query)).to have_been_made.times(2)
       end
@@ -92,7 +94,7 @@ RSpec.describe ComicVine do
       it "sends a custom User-Agent" do
         stub_request(:get, url).with(:query => query).to_return(:status => 200, :body => ISSUES_BODY_1)
         ComicVine::API.issues
-        expect(a_request(:get, url).with(:query => query, :headers => {'User-Agent' => /comic_vine gem/})).to have_been_made
+        expect(a_request(:get, url).with(:query => query, :headers => { 'User-Agent' => /comic_vine gem/ })).to have_been_made
       end
     end
 
@@ -104,7 +106,7 @@ RSpec.describe ComicVine do
 
     describe "build_query" do
       it "URL-encodes values" do
-        expect(ComicVine::API.send(:build_query, {:filter => "name:gizmo & friends"})).to eq("&filter=name%3Agizmo+%26+friends")
+        expect(ComicVine::API.send(:build_query, { :filter => "name:gizmo & friends" })).to eq("&filter=name%3Agizmo+%26+friends")
       end
 
       it "returns an empty string for nil or empty opts" do
@@ -131,10 +133,10 @@ RSpec.describe ComicVine do
 
     describe "ComicVine search" do
       before do
-        stub_request(:get, "https://comicvine.gamespot.com/api/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :resources => "volume", :query => "gizmo"}).to_return(:status => 200, :body => SEARCH_BODY_1)
-        stub_request(:get, "https://comicvine.gamespot.com/api/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :page => 1, :resources => "volume", :query => "gizmo"}).to_return(:status => 200, :body => SEARCH_BODY_1)
-        stub_request(:get, "https://comicvine.gamespot.com/api/search/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 1, :page => 2, :resources => "volume", :query => "gizmo"}).to_return(:status => 200, :body => SEARCH_BODY_2)
-        @results = ComicVine::API.search "volume", "gizmo", {:limit => 1}
+        stub_request(:get, "https://comicvine.gamespot.com/api/search/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 1, :resources => "volume", :query => "gizmo" }).to_return(:status => 200, :body => SEARCH_BODY_1)
+        stub_request(:get, "https://comicvine.gamespot.com/api/search/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 1, :page => 1, :resources => "volume", :query => "gizmo" }).to_return(:status => 200, :body => SEARCH_BODY_1)
+        stub_request(:get, "https://comicvine.gamespot.com/api/search/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 1, :page => 2, :resources => "volume", :query => "gizmo" }).to_return(:status => 200, :body => SEARCH_BODY_2)
+        @results = ComicVine::API.search "volume", "gizmo", { :limit => 1 }
       end
       subject { @results }
 
@@ -146,9 +148,9 @@ RSpec.describe ComicVine do
       specify { expect(@results.next_page).to equal(@results) }
 
       it "does not mutate the caller's opts hash" do
-        opts = {:limit => 1}
+        opts = { :limit => 1 }
         ComicVine::API.search "volume", "gizmo", opts
-        expect(opts).to eq({:limit => 1})
+        expect(opts).to eq({ :limit => 1 })
       end
 
       context "when on last page" do
@@ -163,7 +165,7 @@ RSpec.describe ComicVine do
       end
 
       it "fetches the full CVObject" do
-        stub_request(:get, "https://comicvine.gamespot.com/api/volume/4050-24708/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => VOLUME_BODY)
+        stub_request(:get, "https://comicvine.gamespot.com/api/volume/4050-24708/").with(:query => { :format => 'json', :api_key => ComicVine::API.key }).to_return(:status => 200, :body => VOLUME_BODY)
         vol = @results.first.fetch
         expect(vol).to be_a_kind_of ComicVine::CVObject
       end
@@ -171,9 +173,9 @@ RSpec.describe ComicVine do
 
     describe "ComicVine list" do
       before do
-        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => ISSUES_BODY_1)
-        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 0}).to_return(:status => 200, :body => ISSUES_BODY_1)
-        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 2}).to_return(:status => 200, :body => ISSUES_BODY_2)
+        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => { :format => 'json', :api_key => ComicVine::API.key }).to_return(:status => 200, :body => ISSUES_BODY_1)
+        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 0 }).to_return(:status => 200, :body => ISSUES_BODY_1)
+        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 2 }).to_return(:status => 200, :body => ISSUES_BODY_2)
         @issues = ComicVine::API.issues
       end
       subject { @issues }
@@ -197,15 +199,15 @@ RSpec.describe ComicVine do
 
     describe "list pagination with options and a partial last page" do
       before do
-        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :filter => "volume:1487"}).to_return(:status => 200, :body => ISSUES_PARTIAL_1)
-        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 0, :filter => "volume:1487"}).to_return(:status => 200, :body => ISSUES_PARTIAL_1)
-        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => {:format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 2, :filter => "volume:1487"}).to_return(:status => 200, :body => ISSUES_PARTIAL_2)
-        @issues = ComicVine::API.issues({:limit => 2, :filter => "volume:1487"})
+        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 2, :filter => "volume:1487" }).to_return(:status => 200, :body => ISSUES_PARTIAL_1)
+        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 0, :filter => "volume:1487" }).to_return(:status => 200, :body => ISSUES_PARTIAL_1)
+        stub_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => { :format => 'json', :api_key => ComicVine::API.key, :limit => 2, :offset => 2, :filter => "volume:1487" }).to_return(:status => 200, :body => ISSUES_PARTIAL_2)
+        @issues = ComicVine::API.issues({ :limit => 2, :filter => "volume:1487" })
       end
 
       it "preserves the original options when paginating" do
         expect(@issues.next_page).to equal(@issues)
-        expect(a_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => hash_including({"filter" => "volume:1487", "offset" => "2"}))).to have_been_made
+        expect(a_request(:get, "https://comicvine.gamespot.com/api/issues/").with(:query => hash_including({ "filter" => "volume:1487", "offset" => "2" }))).to have_been_made
       end
 
       it "refreshes page_count from each response" do
@@ -228,8 +230,8 @@ RSpec.describe ComicVine do
 
     describe "ComicVine detail" do
       before do
-        stub_request(:get, "https://comicvine.gamespot.com/api/issue/4000-145830/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => ISSUE_BODY)
-        @issue = ComicVine::API.issue 145830
+        stub_request(:get, "https://comicvine.gamespot.com/api/issue/4000-145830/").with(:query => { :format => 'json', :api_key => ComicVine::API.key }).to_return(:status => 200, :body => ISSUE_BODY)
+        @issue = ComicVine::API.issue 145_830
       end
       subject { @issue }
 
@@ -238,10 +240,10 @@ RSpec.describe ComicVine do
       it { is_expected.to respond_to("get_volume") }
       specify { expect { @issue.something }.to raise_error(NoMethodError) }
       specify { expect { @issue.get_something }.to raise_error(NoMethodError) }
-      specify { expect(@issue.get_id).to eq(145830) }
+      specify { expect(@issue.get_id).to eq(145_830) }
 
       it "has a detail and list association" do
-        stub_request(:get, "https://comicvine.gamespot.com/api/volume/4050-24708/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => VOLUME_BODY)
+        stub_request(:get, "https://comicvine.gamespot.com/api/volume/4050-24708/").with(:query => { :format => 'json', :api_key => ComicVine::API.key }).to_return(:status => 200, :body => VOLUME_BODY)
         vol = @issue.get_volume
         expect(vol).to be_a_kind_of ComicVine::CVObject
         iss = vol.get_issues

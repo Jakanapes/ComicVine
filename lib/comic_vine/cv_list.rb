@@ -27,8 +27,8 @@ module ComicVine
     end
 
     # Yields each {CVObject} on the current page.
-    def each
-      @cvos.each { |c| yield c }
+    def each(&)
+      @cvos.each(&)
     end
 
     # @return [CVObject, nil] the last object on the current page
@@ -42,14 +42,15 @@ module ComicVine
     end
 
     protected
-      def update_ivals(new_cvol)
-        @total_count = new_cvol.total_count
-        @page_count = new_cvol.page_count
-        @offset = new_cvol.offset
-        @limit = new_cvol.limit
 
-        @cvos = new_cvol.cvos
-      end
+    def update_ivals(new_cvol)
+      @total_count = new_cvol.total_count
+      @page_count = new_cvol.page_count
+      @offset = new_cvol.offset
+      @limit = new_cvol.limit
+
+      @cvos = new_cvol.cvos
+    end
   end
 
   # A paginated list of resources (e.g. from `ComicVine::API.characters`).
@@ -62,12 +63,12 @@ module ComicVine
     # @param resp [Hash] a list response from the API
     # @param resc [String] the plural resource name
     # @param opts [Hash] the options the list was fetched with
-    def initialize(resp, resc, opts={})
+    def initialize(resp, resc, opts = {})
       super(resp)
 
       @resource = resc
       @opts = opts || {}
-      @cvos = resp['results'].map{ |r| ComicVine::CVObject.new(r)}
+      @cvos = resp['results'].map { |r| ComicVine::CVObject.new(r) }
     end
 
     # Advances to the next page, updating the list in place.
@@ -76,6 +77,7 @@ module ComicVine
     # @raise [CVError]
     def next_page
       return nil if (@offset + @page_count) >= @total_count
+
       update_ivals(ComicVine::API.send(@resource, @opts.merge(:limit => @limit, :offset => (@offset + @limit))))
       self
     end
@@ -86,6 +88,7 @@ module ComicVine
     # @raise [CVError]
     def prev_page
       return nil if @offset == 0
+
       update_ivals(ComicVine::API.send(@resource, @opts.merge(:limit => @limit, :offset => [@offset - @limit, 0].max)))
       self
     end
@@ -102,13 +105,13 @@ module ComicVine
     # @param resc [String] the resource type(s) searched
     # @param query [String] the search query
     # @param opts [Hash] the options the search was made with
-    def initialize(resp, resc, query, opts={})
+    def initialize(resp, resc, query, opts = {})
       super(resp)
 
       @resource = resc
       @query = query
       @opts = opts || {}
-      @cvos = resp['results'].map{ |r| ComicVine::CVObject.new(r)}
+      @cvos = resp['results'].map { |r| ComicVine::CVObject.new(r) }
     end
 
     # Advances to the next page of results, updating the list in place.
@@ -117,6 +120,7 @@ module ComicVine
     # @raise [CVError]
     def next_page
       return nil if (@offset + @page_count) >= @total_count
+
       update_ivals(ComicVine::API.search(@resource, @query, @opts.merge(:limit => @limit, :page => page + 1)))
       self
     end
@@ -127,6 +131,7 @@ module ComicVine
     # @raise [CVError]
     def prev_page
       return nil if @offset == 0
+
       update_ivals(ComicVine::API.search(@resource, @query, @opts.merge(:limit => @limit, :page => page - 1)))
       self
     end
