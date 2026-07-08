@@ -1,9 +1,20 @@
+# frozen_string_literal: true
+
 require "comic_vine/version"
 require "net/http"
 require "openssl"
-require "multi_json"
+require "json"
 require "cgi"
 
+# A simple Ruby interface to the ComicVine API
+# (https://comicvine.gamespot.com/api/).
+#
+# Set {ComicVine::API.key} and call resource methods on {ComicVine::API}:
+#
+#     ComicVine::API.key = "your-api-key"
+#     ComicVine::API.volume 766
+#     ComicVine::API.characters(limit: 5)
+#     ComicVine::API.search "volume", "batman"
 module ComicVine
 
   # Base class for all errors raised by this gem.
@@ -21,8 +32,11 @@ module ComicVine
 
   # Raised when the server answers with a non-2xx HTTP status.
   class CVHTTPError < CVError
+    # @return [Integer, nil] the HTTP status code, if known
     attr_reader :status
 
+    # @param message [String] the error message
+    # @param status [Integer, nil] the HTTP status code
     def initialize(message, status = nil)
       @status = status
       super(message)
@@ -38,6 +52,12 @@ module ComicVine
   class CVParseError < CVError
   end
 
+  # Class-level entry point for all ComicVine API calls.
+  #
+  # Resource methods are resolved dynamically against the API's `/types/`
+  # list: plural resources (`characters`, `volumes`, ...) return a
+  # {CVObjectList}, singular resources (`character`, `volume`, ...) take an id
+  # and return a {CVObject}.
   class API
     API_BASE_URL = "https://comicvine.gamespot.com/api/"
     TYPES_CACHE_TTL = 4 * 60 * 60
@@ -58,29 +78,62 @@ module ComicVine
     @retry_base_delay = 1.0
 
     class << self
+      # @!attribute key
+      #   @return [String, nil] your ComicVine API key (required)
       attr_accessor :key
+
+      # @!attribute open_timeout
+      #   @return [Numeric] seconds to wait for the connection to open (default 10)
+      # @!attribute read_timeout
+      #   @return [Numeric] seconds to wait for a response (default 30)
       attr_accessor :open_timeout, :read_timeout
+
+      # @!attribute max_retries
+      #   @return [Integer] retries on 420/429/5xx and connection errors (default 3)
+      # @!attribute retry_base_delay
+      #   @return [Numeric] base for exponential backoff, in seconds (default 1.0)
       attr_accessor :max_retries, :retry_base_delay
+
       attr_writer :user_agent
 
+      # The User-Agent header sent with every request.
+      #
+      # @return [String] defaults to `comic_vine gem/x.y.z (Ruby/x.y.z)`
       def user_agent
         @user_agent ||= "comic_vine gem/#{ComicVine::VERSION} (Ruby/#{RUBY_VERSION})"
       end
 
+      # Searches ComicVine.
+      #
+      # @param res [String] resource type or types, comma-separated (e.g. `"volume,issue"`)
+      # @param query [String] the search string
+      # @param opts [Hash] extra query options (`:limit`, `:field_list`, ...)
+      # @return [CVSearchList]
+      # @raise [CVError]
       def search res, query, opts={}
         query_opts = opts.merge(:resources => res.gsub(" ", ""), :query => query)
         resp = hit_api(build_base_url("search"), build_query(query_opts))
         ComicVine::CVSearchList.new(resp, res, query, opts)
       end
 
+      # Looks up a plural (list) resource in the `/types/` list.
+      #
+      # @param type [String] e.g. `"characters"`
+      # @return [Hash, nil]
       def find_list type
         types.find { |t| t['list_resource_name'] == type }
       end
 
+      # Looks up a singular (detail) resource in the `/types/` list.
+      #
+      # @param type [String] e.g. `"character"`
+      # @return [Hash, nil]
       def find_detail type
         types.find { |t| t['detail_resource_name'] == type }
       end
 
+      # Resolves resource methods (`ComicVine::API.characters`,
+      # `ComicVine::API.volume 766`, ...) against the `/types/` list.
       def method_missing(method_sym, *arguments, &block)
         if find_list(method_sym.to_s)
           get_list method_sym.to_s, arguments.first
@@ -99,6 +152,11 @@ module ComicVine
         super
       end
 
+      # The cached `/types/` list, fetched on first use and refreshed every
+      # {TYPES_CACHE_TTL} seconds.
+      #
+      # @return [Array<Hash>]
+      # @raise [CVError] if the `/types/` list cannot be fetched
       def types
         @types_mutex.synchronize do
           if @types.nil? || (@last_type_check + TYPES_CACHE_TTL) < Time.now
@@ -115,7 +173,9 @@ module ComicVine
         end
       end
 
-      # Clears the cached /types/ list (mainly useful in tests).
+      # Clears the cached `/types/` list (mainly useful in tests).
+      #
+      # @return [void]
       def reset_types_cache!
         @types_mutex.synchronize do
           @types = nil
@@ -123,11 +183,25 @@ module ComicVine
         end
       end
 
+      # Fetches a list resource.
+      #
+      # @param list_type [String] plural resource name (e.g. `"characters"`)
+      # @param opts [Hash, nil] query options (`:limit`, `:offset`, `:filter`,
+      #   `:sort`, `:field_list`, ...)
+      # @return [CVObjectList]
+      # @raise [CVError]
       def get_list list_type, opts=nil
         resp = hit_api(build_base_url(list_type), build_query(opts))
         ComicVine::CVObjectList.new(resp, list_type, opts || {})
       end
 
+      # Fetches a single resource by id.
+      #
+      # @param item_type [String] singular resource name (e.g. `"volume"`)
+      # @param id [Integer, String] the resource id
+      # @param opts [Hash, nil] query options (`:field_list`, ...)
+      # @return [CVObject]
+      # @raise [CVError] if the type is unknown or the request fails
       def get_details item_type, id, opts=nil
         detail = find_detail(item_type)
         raise CVError, "Unknown ComicVine resource type: #{item_type}" if detail.nil?
@@ -135,6 +209,11 @@ module ComicVine
         ComicVine::CVObject.new(resp['results'])
       end
 
+      # Fetches a resource from its `api_detail_url`.
+      #
+      # @param url [String]
+      # @return [CVObject]
+      # @raise [CVError]
       def get_details_by_url url
         resp = hit_api(url)
         ComicVine::CVObject.new(resp['results'])
@@ -198,8 +277,8 @@ module ComicVine
 
         def parse_body body
           presp = begin
-            MultiJson.load(body)
-          rescue MultiJson::ParseError => e
+            JSON.parse(body)
+          rescue JSON::ParserError => e
             raise CVParseError, "ComicVine returned a response that is not valid JSON: #{e.message}"
           end
           raise CVParseError, "ComicVine returned unexpected JSON (expected an object, got #{presp.class})" unless presp.kind_of?(Hash)

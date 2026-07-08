@@ -1,7 +1,6 @@
-source 'https://rubygems.org'
+# frozen_string_literal: true
 
-# Specify your gem's dependencies in comic_vine.gemspec
+source "https://rubygems.org"
+
+# Dependencies are specified in comic_vine.gemspec
 gemspec
-
-gem 'gson', platform: :jruby
-gem 'oj', platform: :ruby
