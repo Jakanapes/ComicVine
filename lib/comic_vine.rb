@@ -252,7 +252,8 @@ module ComicVine
 
           if [420, 429].include?(code)
             raise CVRateLimitError.new(
-              "ComicVine rate limit hit (HTTP #{code}) and still throttled after #{attempt} attempts. The API allows roughly 200 requests per resource per hour.", code
+              "ComicVine rate limit hit (HTTP #{code}) and still throttled after #{attempt} attempts" \
+              "The API allows roughly 200 requests per resource per hour.", code
             )
           end
 
