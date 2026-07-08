@@ -3,6 +3,8 @@ require 'spec_helper'
 RSpec.describe ComicVine do
   before(:all) do
     ComicVine::API.key = "some_api_key"
+    # Keep retries instant in tests
+    ComicVine::API.retry_base_delay = 0
   end
 
   specify { expect(ComicVine::API.key).to eq("some_api_key") }
@@ -10,24 +12,87 @@ RSpec.describe ComicVine do
   context "when has invalid api key" do
     before do
       # Reset the cached types list so the request is actually made
-      ComicVine::API.class_variable_set(:@@types, nil)
+      ComicVine::API.reset_types_cache!
       stub_request(:get, "https://comicvine.gamespot.com/api/types/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => ERROR_BODY)
     end
 
-    it "raises a CVError" do
-      expect { ComicVine::API.issues }.to raise_error(ComicVine::CVError, "Invalid API Key")
+    it "raises a CVAPIError naming the hidden types call" do
+      expect { ComicVine::API.issues }.to raise_error(ComicVine::CVAPIError, /types.*Invalid API Key/)
     end
   end
 
   context "when has valid api key" do
     before do
-      ComicVine::API.class_variable_set(:@@types, nil)
+      ComicVine::API.reset_types_cache!
       stub_request(:get, "https://comicvine.gamespot.com/api/types/").with(:query => {:format => 'json', :api_key => ComicVine::API.key}).to_return(:status => 200, :body => TYPES_BODY)
     end
 
     describe "invalid method" do
       it "raises NoMethodError" do
         expect { ComicVine::API.something }.to raise_error(NoMethodError)
+      end
+    end
+
+    describe "dynamic methods and respond_to?" do
+      it "responds to list and detail resources from the types list" do
+        expect(ComicVine::API.respond_to?(:issues)).to be true
+        expect(ComicVine::API.respond_to?(:issue)).to be true
+        expect(ComicVine::API.respond_to?(:something)).to be false
+      end
+
+      it "returns a Method object for dynamic methods" do
+        expect(ComicVine::API.method(:issues)).to be_a_kind_of(Method)
+      end
+    end
+
+    describe "HTTP robustness" do
+      let(:url) { "https://comicvine.gamespot.com/api/issues/" }
+      let(:query) { {:format => 'json', :api_key => ComicVine::API.key} }
+
+      it "raises CVHTTPError with the status on a non-retryable HTTP error" do
+        stub_request(:get, url).with(:query => query).to_return(:status => 404, :body => "not found")
+        expect { ComicVine::API.issues }.to raise_error(ComicVine::CVHTTPError) { |e| expect(e.status).to eq(404) }
+      end
+
+      it "raises CVParseError on a non-JSON body" do
+        stub_request(:get, url).with(:query => query).to_return(:status => 200, :body => "<html>maintenance</html>")
+        expect { ComicVine::API.issues }.to raise_error(ComicVine::CVParseError)
+      end
+
+      it "retries retryable statuses and succeeds" do
+        stub_request(:get, url).with(:query => query)
+          .to_return(:status => 503, :body => "")
+          .to_return(:status => 200, :body => ISSUES_BODY_1)
+        expect(ComicVine::API.issues).to be_a_kind_of(ComicVine::CVList)
+        expect(a_request(:get, url).with(:query => query)).to have_been_made.times(2)
+      end
+
+      it "raises CVRateLimitError once retries are exhausted on 420" do
+        old = ComicVine::API.max_retries
+        ComicVine::API.max_retries = 1
+        begin
+          stub_request(:get, url).with(:query => query).to_return(:status => 420, :body => "")
+          expect { ComicVine::API.issues }.to raise_error(ComicVine::CVRateLimitError) { |e| expect(e.status).to eq(420) }
+        ensure
+          ComicVine::API.max_retries = old
+        end
+      end
+
+      it "raises CVConnectionError when the connection keeps timing out" do
+        old = ComicVine::API.max_retries
+        ComicVine::API.max_retries = 1
+        begin
+          stub_request(:get, url).with(:query => query).to_timeout
+          expect { ComicVine::API.issues }.to raise_error(ComicVine::CVConnectionError)
+        ensure
+          ComicVine::API.max_retries = old
+        end
+      end
+
+      it "sends a custom User-Agent" do
+        stub_request(:get, url).with(:query => query).to_return(:status => 200, :body => ISSUES_BODY_1)
+        ComicVine::API.issues
+        expect(a_request(:get, url).with(:query => query, :headers => {'User-Agent' => /comic_vine gem/})).to have_been_made
       end
     end
 
